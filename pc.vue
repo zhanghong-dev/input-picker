@@ -1,5 +1,9 @@
 <style scoped>
 
+    @import url('./iconfont.css');
+
+
+
     .portal-component__input-picker {
         position: relative;
         width: 100%;
@@ -74,10 +78,50 @@
         border-color: transparent transparent #FFFFFF transparent;
     }
 
-    .portal-component__input-picker__drop-list > div {
+    .portal-component__input-picker__drop-list .at__slot {
         overflow-x: hidden;
         overflow-y: auto;
         max-height: 288px;
+    }
+
+
+
+    /**
+     * filter
+     */
+
+    .portal-component__input-picker__drop-list .at__filter {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 0 20px 10px 20px;
+        border-bottom: 1px solid #CCCCCC;
+    }
+
+    .portal-component__input-picker__drop-list .at__filter:before {
+        content: "\e6a6";
+        font-family: "iconfont" !important;
+        font-size: 20px;
+        line-height: 20px;
+        color: #616161;
+    }
+
+    .portal-component__input-picker__drop-list .at__filter input {
+        width: 100%;
+        padding: 10px;
+        border-width: 0;
+        font-size: 16px;
+        line-height: 16px;
+        color: #1A1A1A;
+        background-color: transparent;
+    }
+
+    .portal-component__input-picker__drop-list .at__filter input:focus {
+        outline: none;
+    }
+
+    .portal-component__input-picker__drop-list .at__filter input::placeholder {
+        color: #616161;
     }
 
 
@@ -145,7 +189,16 @@
 
 
         <div v-show=" showDropList " ref="dropList" class="portal-component__input-picker__drop-list" :class="dropListClass" @click.stop>
-            <div>
+
+            <div v-if=" filterable " class="at__filter">
+                <input ref="filterInput" :placeholder="filterPlaceholder"
+                    @input="($event) => {
+                        $emit('filter', $event.target.value);
+                    }">
+                </input>
+            </div>
+
+            <div class="at__slot">
                 <slot></slot>
             </div>
         </div>
@@ -166,7 +219,15 @@
                 type: String
             },
 
+            filterPlaceholder: {
+                type: String
+            },
+
             readonly: {
+                type: Boolean
+            },
+
+            filterable: {
                 type: Boolean
             },
 
@@ -226,14 +287,12 @@
 
             },
 
-            handleEvent_dropList($event) {
+            handleEvent_showDropList($event) {
 
                 if ( !this._isDestroyed && !this.readonly ) {
 
                     // 显示
                     if ( $event.target === this.$refs.input ) {
-
-                        this.showDropList = true;
 
                         if ( this.pickedOption )
                             setTimeout(
@@ -245,6 +304,9 @@
 
                                 }
                             );
+
+                        this.$emit('filter', this.$refs.filterInput.value = '' );
+                        this.showDropList = true;
 
                     }
 
@@ -263,7 +325,6 @@
 
                 this.pickedOption = $option;
                 this.pickedOption.$el.classList.add('__picked');
-                this.handleEvent_hover($option);
                 this.$emit('input', $option.value);
                 this.$emit('change', $option.value);
 
@@ -285,7 +346,7 @@
 
         mounted() {
 
-            document.addEventListener('click', this.handleEvent_dropList);
+            document.addEventListener('click', this.handleEvent_showDropList);
             this.$on('picked', this.handleEvent_picked);
             this.$on('hover', this.handleEvent_hover);
             this.init();
@@ -295,7 +356,7 @@
 
         beforeDestroy() {
 
-            document.removeEventListener('click', this.handleEvent_dropList);
+            document.removeEventListener('click', this.handleEvent_showDropList);
 
         },
 
